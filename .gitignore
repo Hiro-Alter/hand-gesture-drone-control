@@ -1,0 +1,31 @@
+# Virtual environment
+.venv/
+
+# Dataset folder (workspace-specific)
+dataset/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Pyenv
+.python-version
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Logs and local env files
+*.log
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
