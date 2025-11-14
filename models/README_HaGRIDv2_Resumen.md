@@ -71,8 +71,8 @@ Los gestos fueron elegidos por su claridad visual y ergonomía.
 | **Detenerse / Hover** | ✋ `stop` | Pausar el movimiento. |
 | **Avanzar** | 👉 `point` | Indica dirección hacia adelante. |
 | **Retroceder** | 👎 `dislike` | Movimiento inverso o atrás. |
-| **Moverse a la izquierda** | ✌️ `two up` | Dirección lateral izquierda. |
-| **Moverse a la derecha** | ✌️ `two up inverted` | Dirección lateral derecha. |
+| **Moverse a la izquierda** | ✌️ `peace` | Dirección lateral izquierda. |
+| **Moverse a la derecha** | ✌️ `peace inverted` | Dirección lateral derecha. |
 | **Subir** | ✌️ `two up` | Ascenso vertical. |
 | **Bajar** | ✌️ `two up inverted` | Descenso vertical. |
 | **Girar (rotar sobre eje Z)** | 🤘 `rock` | Giro controlado del dron. |
