@@ -8,7 +8,7 @@ import mediapipe as mp
 # Usar por defecto la misma nombre de archivo que había en el script,
 # pero ubicado en la misma carpeta donde está este .py
 script_dir = os.path.dirname(os.path.abspath(__file__))
-_default_filename = os.path.basename(r"WIN_20251110_14_39_03_Pro.jpg")
+_default_filename = os.path.basename(r"64810a08-a337-4a51-a4fe-763a6a32e877.jpg")
 default_image_path = os.path.join(script_dir, _default_filename)
 
 parser = argparse.ArgumentParser(description="Detectar mano en una imagen usando MediaPipe")
