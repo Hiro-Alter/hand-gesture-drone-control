@@ -11,8 +11,8 @@ from segmentar_ROI import make_square_bbox   # reutilizamos la misma lógica
 from recalcular_anotaciones import CLASS_NAME, ANNOT_ROOT
 
 IMG_512_ROOT = "dataset/hagridv2_512"   # ajusta esto al path real
-N_SAMPLES = 1
-TEST_IMG_ID = "5fa260f8-a3be-4f8b-9851-376de8b74c43"
+N_SAMPLES = 0
+TEST_IMG_ID = "4a2fa40f-7625-48b5-9b37-bd71106ee38d"
 
 
 def plot_crop_with_landmarks(crop: Image.Image, lms_px: List[List[float]], title: str):
@@ -29,19 +29,54 @@ def plot_crop_with_landmarks(crop: Image.Image, lms_px: List[List[float]], title
     plt.show()
 
 
-def plot_full_512_with_landmarks(img: Image.Image, lms_norm: List[List[float]], title: str):
-    """Muestra la imagen 512p completa con los landmarks del JSON (normalizados)."""
+def plot_full_512_with_landmarks_multi(
+    img: Image.Image,
+    bboxes: List[List[float]],
+    hand_lms_list: List[List[List[float]]],
+    labels: List[str],
+    class_name: str,
+    title: str,
+):
+    """Muestra la imagen 512p completa con TODOS los bboxes y landmarks.
+
+    - Para cada índice i:
+      - bbox[i] se dibuja con un rectángulo.
+      - hand_landmarks[i] se dibujan como puntos.
+    - Si labels[i] == class_name → rojo; si no → azul.
+    """
     W, H = img.size
     arr = np.array(img)
-
-    xs = [p[0] * W for p in lms_norm]
-    ys = [p[1] * H for p in lms_norm]
 
     plt.figure(figsize=(4, 4))
     plt.imshow(arr)
     plt.title(title)
     plt.axis("off")
-    plt.scatter(xs, ys, s=20, c="cyan")
+
+    for i, bbox in enumerate(bboxes):
+        if len(bbox) != 4:
+            continue
+        if i >= len(hand_lms_list):
+            continue
+
+        color = "red" if i < len(labels) and labels[i] == class_name else "blue"
+
+        x_norm, y_norm, w_norm, h_norm = bbox
+        x = x_norm * W
+        y = y_norm * H
+        w = w_norm * W
+        h = h_norm * H
+
+        # rectángulo del bbox
+        rect_x = [x, x + w, x + w, x, x]
+        rect_y = [y, y, y + h, y + h, y]
+        plt.plot(rect_x, rect_y, color=color, linewidth=2)
+
+        # puntos de landmarks
+        lms_norm = hand_lms_list[i]
+        xs = [p[0] * W for p in lms_norm]
+        ys = [p[1] * H for p in lms_norm]
+        plt.scatter(xs, ys, s=20, c=color)
+
     plt.tight_layout()
     plt.show()
 
@@ -64,18 +99,23 @@ def visualizar_test_id_en_splits():
         print(f"[OK] Encontrado {TEST_IMG_ID} en split '{split}'")
         ann = annotations[TEST_IMG_ID]
         labels = ann.get("labels", [])
-        bboxes = ann.get("bboxes", []),
+        bboxes = ann.get("bboxes", [])          # <- sin coma
         hand_lms_list = ann.get("hand_landmarks", [])
 
-        if not bboxes or not hand_lms_list or CLASS_NAME not in labels:
-            print(f"[WARN] Falta bbox/landmarks o label {CLASS_NAME} en {TEST_IMG_ID}")
+        if not bboxes or not hand_lms_list:
+            print(f"[WARN] Falta bbox/landmarks en {TEST_IMG_ID}")
             continue
 
-        hl_index = labels.index(CLASS_NAME)
-        if hl_index >= len(bboxes) or hl_index >= len(hand_lms_list):
-            print(f"[WARN] Índices inconsistentes en {TEST_IMG_ID}")
+        # Índices de todas las manos con ese label
+        indices_clase = [i for i, lab in enumerate(labels) if lab == CLASS_NAME]
+        print(f"  labels: {labels}")
+        print(f"  num bboxes: {len(bboxes)}, num hand_landmarks: {len(hand_lms_list)}")
+        print(f"  indices_clase (labels == {CLASS_NAME}): {indices_clase}")
+        if not indices_clase:
+            print(f"[WARN] No hay ninguna mano con label {CLASS_NAME} en {TEST_IMG_ID}")
             continue
 
+        # Cargar imagen 512p una sola vez
         img_dir_512 = os.path.join(IMG_512_ROOT, CLASS_NAME)
         img_name_jpg = f"{TEST_IMG_ID}.jpg"
         img_path = os.path.join(img_dir_512, img_name_jpg)
@@ -89,40 +129,56 @@ def visualizar_test_id_en_splits():
         img = Image.open(img_path)
         W, H = img.size
 
-        hand_lms_norm = hand_lms_list[hl_index]
-
-        plot_full_512_with_landmarks(
+        # 1) Imagen 512 completa con todos los bboxes/landmarks
+        plot_full_512_with_landmarks_multi(
             img,
-            hand_lms_norm,
-            title=f"{split} - {TEST_IMG_ID} (512p completa + landmarks)"
+            bboxes,
+            hand_lms_list,
+            labels,
+            CLASS_NAME,
+            title=f"{split} - {TEST_IMG_ID} (512p + todos los bboxes/landmarks)",
         )
 
-        x_norm, y_norm, w_norm, h_norm = bboxes[hl_index]
-        x = x_norm * W
-        y = y_norm * H
-        w = w_norm * W
-        h = h_norm * H
+        # 2) Dibujar ROI solo para las manos de la clase
+        for hl_index in indices_clase:
+            if hl_index >= len(bboxes) or hl_index >= len(hand_lms_list):
+                print(f"[WARN] Índices inconsistentes en {TEST_IMG_ID}, idx={hl_index}")
+                continue
 
-        sq_x, sq_y, sq_side = make_square_bbox(x, y, w, h, W, H)
-        if sq_side <= 0:
-            print(f"[WARN] ROI vacía en {TEST_IMG_ID}")
-            continue
+            bbox = bboxes[hl_index]
+            if len(bbox) != 4:
+                print(f"[WARN] bbox con longitud {len(bbox)} en {TEST_IMG_ID}, idx={hl_index}")
+                continue
 
-        crop = img.crop((sq_x, sq_y, sq_x + sq_side, sq_y + sq_side))
+            print(f"  Usando hl_index={hl_index} -> label='{labels[hl_index]}'")
+            hand_lms_norm = hand_lms_list[hl_index]
 
-        lms_px_in_crop = []
-        for (lx_norm, ly_norm) in hand_lms_norm:
-            lx = lx_norm * W
-            ly = ly_norm * H
-            lx_crop = lx - sq_x
-            ly_crop = ly - sq_y
-            lms_px_in_crop.append([lx_crop, ly_crop])
+            x_norm, y_norm, w_norm, h_norm = bbox
+            x = x_norm * W
+            y = y_norm * H
+            w = w_norm * W
+            h = h_norm * H
 
-        plot_crop_with_landmarks(
-            crop,
-            lms_px_in_crop,
-            title=f"{split} - {TEST_IMG_ID} (ROI desde 512p)"
-        )
+            sq_x, sq_y, sq_side = make_square_bbox(x, y, w, h, W, H)
+            if sq_side <= 0:
+                print(f"[WARN] ROI vacía en {TEST_IMG_ID} idx={hl_index}")
+                continue
+
+            crop = img.crop((sq_x, sq_y, sq_x + sq_side, sq_y + sq_side))
+
+            lms_px_in_crop = []
+            for (lx_norm, ly_norm) in hand_lms_norm:
+                lx = lx_norm * W
+                ly = ly_norm * H
+                lx_crop = lx - sq_x
+                ly_crop = ly - sq_y
+                lms_px_in_crop.append([lx_crop, ly_crop])
+
+            plot_crop_with_landmarks(
+                crop,
+                lms_px_in_crop,
+                title=f"{split} - {TEST_IMG_ID} (ROI idx={hl_index})"
+            )
 
         # Solo mostramos en el primer split donde se encuentre
         return
