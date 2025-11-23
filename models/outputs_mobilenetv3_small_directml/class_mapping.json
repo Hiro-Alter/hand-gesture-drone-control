@@ -1,0 +1,26 @@
+{
+  "class_to_idx": {
+    "dislike": 0,
+    "fist": 1,
+    "like": 2,
+    "palm": 3,
+    "peace": 4,
+    "peace_inverted": 5,
+    "rock": 6,
+    "stop": 7,
+    "two_up": 8,
+    "two_up_inverted": 9
+  },
+  "idx_to_class": {
+    "0": "dislike",
+    "1": "fist",
+    "2": "like",
+    "3": "palm",
+    "4": "peace",
+    "5": "peace_inverted",
+    "6": "rock",
+    "7": "stop",
+    "8": "two_up",
+    "9": "two_up_inverted"
+  }
+}
