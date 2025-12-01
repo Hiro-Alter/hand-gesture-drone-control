@@ -9,7 +9,7 @@ from segmentar_ROI import make_square_bbox  # usamos la misma lógica de recorte
 # ================================
 #  Parámetros
 # ================================
-CLASS_NAME = "two_up_inverted"   # clase a procesar
+CLASS_NAME = "peace"   # clase a procesar
 
 ANNOT_ROOT = "dataset/annotations"              # JSON original (HaGRID)
 IMG_ORIG_ROOT = "dataset/hagridv2"             # imágenes originales por clase (NO divididas por split)

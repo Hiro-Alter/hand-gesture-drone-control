@@ -12,7 +12,7 @@ from recalcular_anotaciones import CLASS_NAME, ANNOT_ROOT
 
 IMG_512_ROOT = "dataset/hagridv2_512"   # ajusta esto al path real
 N_SAMPLES = 0
-TEST_IMG_ID = "4a2fa40f-7625-48b5-9b37-bd71106ee38d"
+TEST_IMG_ID = "0b63b729-012f-4ef6-9bb0-d23589c63839"
 
 
 def plot_crop_with_landmarks(crop: Image.Image, lms_px: List[List[float]], title: str):
