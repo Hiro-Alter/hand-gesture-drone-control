@@ -2,6 +2,8 @@
 
 Proyecto de reconocimiento de gestos de mano orientado a controlar un dron mediante eventos enviados por WebSocket. El estado actual implementa un pipeline de inferencia en tiempo real usando cámara + MediaPipe (detección/landmarks) + un clasificador (ResNet18 en PyTorch) acelerado con DirectML en Windows.
 
+![Demo](assets/demo.gif)
+
 ## Estado actual
 - Prototipo end-to-end: captura de cámara → detección de mano → recorte ROI → preprocesamiento → clasificación → estabilización temporal → envío por WebSocket.
 - Servidor WebSocket simple con broadcast para que Unity (u otro cliente) reciba mensajes.
