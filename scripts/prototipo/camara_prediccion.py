@@ -35,6 +35,8 @@ WEBSOCKET_URI = "ws://127.0.0.1:8765"  # Dirección del servidor WebSocket
 # Parámetros de inferencia
 CONFIDENCE_THRESHOLD = 0.90  # Confianza mínima para aceptar predicción (90%)
 MIN_SEND_INTERVAL = 0.15     # Segundos mínimos entre envíos de gestos
+GESTURE_STABILITY_TIME = 0.3  # Tiempo que debe mantenerse un gesto para enviarlo (segundos)
+GESTURE_STABILITY_COUNT = 3   # Frames consecutivos requeridos con el mismo gesto
 
 # Parámetros de detección de mano (MediaPipe)
 HAND_PADDING = 0.3                # Margen alrededor de la mano detectada (30%)
@@ -373,6 +375,11 @@ def main():
             # Control de envío de gestos
             last_sent_label = None
             last_sent_time = 0.0
+            
+            # Variables para estabilización de gestos
+            stable_gesture = None       # Gesto que se está estabilizando
+            stable_count = 0            # Contador de frames consecutivos
+            stable_start_time = 0.0     # Momento en que empezó la estabilización
 
             print("[READY] Presiona 'q' para salir\n")
 
@@ -404,18 +411,37 @@ def main():
                     x1, y1, x2, y2 = box
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-                    # Enviar solo si la confianza es alta
+                    # Sistema de estabilización
                     now = time.time()
                     if confidence >= CONFIDENCE_THRESHOLD:
-                        if label_text != last_sent_label or (now - last_sent_time) >= MIN_SEND_INTERVAL:
-                            ws_sender.send_gesture(label_text)
-                            print(f"[SENT] {label_text} (conf: {confidence:.2%})")
-                            last_sent_label = label_text
-                            last_sent_time = now
-                        # Mostrar sin porcentaje cuando confianza es alta
-                    else:
-                        # Predicción con baja confianza, mostrar porcentaje en pantalla
-                        label_text = f"{label_text} ({confidence:.1%})"
+                        # Verificar si es el mismo gesto que se está estabilizando
+                        if label_text == stable_gesture:
+                            stable_count += 1
+                        else:
+                            # Nuevo gesto detectado, reiniciar contadores
+                            stable_gesture = label_text
+                            stable_count = 1
+                            stable_start_time = now
+                        
+                        # Enviar solo si el gesto ha sido estable
+                        time_stable = now - stable_start_time
+                        if (stable_count >= GESTURE_STABILITY_COUNT and 
+                            time_stable >= GESTURE_STABILITY_TIME):
+                            
+                            # Verificar si debe enviarse (cambió o pasó suficiente tiempo)
+                            if label_text != last_sent_label or (now - last_sent_time) >= MIN_SEND_INTERVAL:
+                                ws_sender.send_gesture(label_text)
+                                print(f"[SENT] {label_text} (conf: {confidence:.2%}, stable: {time_stable:.2f}s)")
+                                last_sent_label = label_text
+                                last_sent_time = now
+                    
+                    # Mostrar estado de estabilización en pantalla
+                    if stable_count < GESTURE_STABILITY_COUNT or time_stable < GESTURE_STABILITY_TIME:
+                        label_text = f"{label_text} [{stable_count}/{GESTURE_STABILITY_COUNT}]"
+                else:
+                    # Sin mano, resetear estabilización
+                    stable_gesture = None
+                    stable_count = 0
 
                 # Mostrar resultado en pantalla
                 cv2.putText(
