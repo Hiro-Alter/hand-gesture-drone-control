@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from segmentar_ROI import make_square_bbox   # reutilizamos la misma lógica
-from recalcular_anotaciones import CLASS_NAME, ANNOT_ROOT
+from roi_utils import make_square_bbox
+from generar_roi224_dataset import CLASS_NAME, ANNOT_ROOT
 
-IMG_512_ROOT = "dataset/hagridv2_512"   # ajusta esto al path real
+IMG_512_ROOT = "dataset/hagridv2_512"
 N_SAMPLES = 0
 TEST_IMG_ID = "0b63b729-012f-4ef6-9bb0-d23589c63839"
 
@@ -241,7 +241,7 @@ def main():
             w = w_norm * W
             h = h_norm * H
 
-            # Cuadrar bbox EXACTAMENTE como en segmentar_ROI
+            # Cuadrar bbox
             sq_x, sq_y, sq_side = make_square_bbox(x, y, w, h, W, H)
             if sq_side <= 0:
                 continue

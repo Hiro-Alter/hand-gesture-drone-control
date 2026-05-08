@@ -4,7 +4,7 @@ import json
 
 from PIL import Image
 
-from segmentar_ROI import make_square_bbox  # usamos la misma lógica de recorte en píxeles
+from roi_utils import make_square_bbox  # lógica reutilizable de recorte
 
 # ================================
 #  Parámetros
@@ -50,7 +50,7 @@ def transform_hand_landmarks_via_orig(
     w = w_norm * W
     h = h_norm * H
 
-    # Cuadrar bbox EXACTAMENTE como en segmentar_ROI.py
+    # Cuadrar bbox
     sq_x, sq_y, sq_side = make_square_bbox(x, y, w, h, W, H)
     if sq_side <= 0:
         raise ValueError("sq_side <= 0 al hacer make_square_bbox")
@@ -61,7 +61,7 @@ def transform_hand_landmarks_via_orig(
     if crop.size[0] == 0 or crop.size[1] == 0:
         raise ValueError("ROI vacío")
 
-    # Resize a 224x224 igual que en segmentar_ROI
+    # Resize a 224x224
     crop_224 = crop.resize((TARGET_SIZE, TARGET_SIZE), Image.LANCZOS)
 
     # Proyectar landmarks normalizados (imagen original) al espacio 224

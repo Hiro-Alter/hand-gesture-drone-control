@@ -11,7 +11,7 @@ DATASET_IN_ROOT = Path("dataset/hagridv2_ROI_224")
 DATASET_OUT_ROOT = Path("dataset/hagridv2_ROI_224_processed")
 
 # Clase a procesar
-SELECTED_CLASS = "two_up_inverted"   # Ejemplo: "fist", "palm", etc.
+SELECTED_CLASS = ""   # Ejemplo: "fist", "palm", etc.
 
 # Parámetros del pipeline
 GAMMA = 0.75                     # gamma correction (ec. 3)
