@@ -24,8 +24,14 @@ dist/
 .idea/
 
 # Logs and local env files
+logs/
 *.log
 .env
+
+# Codex-only context notes
+AGENTS.md
+DOCUMENTO_TECNICO_SOFTWARE.md
+docs/*.md
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/

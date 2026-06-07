@@ -1,0 +1,81 @@
+{
+  "commands": {
+    "takeoff": {
+      "label": "Despegar"
+    },
+    "land": {
+      "label": "Aterrizar"
+    },
+    "hover": {
+      "label": "Detener"
+    },
+    "forward": {
+      "label": "Avanzar"
+    },
+    "backward": {
+      "label": "Retroceder"
+    },
+    "left": {
+      "label": "Mover izquierda"
+    },
+    "right": {
+      "label": "Mover derecha"
+    },
+    "ascend": {
+      "label": "Subir"
+    },
+    "descend": {
+      "label": "Bajar"
+    },
+    "rotate_yaw": {
+      "label": "Girar"
+    }
+  },
+  "gestures": {
+    "fist": {
+      "command": "takeoff",
+      "label": "Despegar"
+    },
+    "palm": {
+      "command": "land",
+      "label": "Aterrizar"
+    },
+    "stop": {
+      "command": "hover",
+      "label": "Detener"
+    },
+    "like": {
+      "command": "forward",
+      "label": "Avanzar"
+    },
+    "dislike": {
+      "command": "backward",
+      "label": "Retroceder"
+    },
+    "peace": {
+      "command": "left",
+      "label": "Mover izquierda"
+    },
+    "peace_inverted": {
+      "command": "right",
+      "label": "Mover derecha"
+    },
+    "two_up": {
+      "command": "ascend",
+      "label": "Subir"
+    },
+    "two_up_inverted": {
+      "command": "descend",
+      "label": "Bajar"
+    },
+    "rock": {
+      "command": "rotate_yaw",
+      "label": "Girar"
+    }
+  },
+  "safe_command": {
+    "command": "hover",
+    "label": "Detener"
+  }
+}
+

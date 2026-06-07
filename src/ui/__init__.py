@@ -1,0 +1,2 @@
+"""Interfaz grafica PySide6."""
+

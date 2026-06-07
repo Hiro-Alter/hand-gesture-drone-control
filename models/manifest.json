@@ -1,0 +1,56 @@
+{
+  "description": "Portable exports for the final hand gesture models.",
+  "input": {
+    "shape": [
+      "batch",
+      3,
+      224,
+      224
+    ],
+    "color_order": "RGB",
+    "image_size": 224,
+    "value_range_before_normalization": "0.0..1.0",
+    "normalization": {
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    }
+  },
+  "output": {
+    "type": "logits",
+    "postprocess": "argmax over class_names"
+  },
+  "models": [
+    {
+      "name": "resnet18",
+      "architecture": "resnet18",
+      "directory": "models/resnet18",
+      "artifacts": [
+        "models/resnet18/model_torchscript.pt",
+        "models/resnet18/model.onnx",
+        "models/resnet18/model_state_dict.pth"
+      ],
+      "metadata": "models/resnet18/metadata.json",
+      "labels": "models/resnet18/labels.txt"
+    },
+    {
+      "name": "mobilenetv3_small",
+      "architecture": "mobilenetv3_small",
+      "directory": "models/mobilenetv3_small",
+      "artifacts": [
+        "models/mobilenetv3_small/model_torchscript.pt",
+        "models/mobilenetv3_small/model.onnx",
+        "models/mobilenetv3_small/model_state_dict.pth"
+      ],
+      "metadata": "models/mobilenetv3_small/metadata.json",
+      "labels": "models/mobilenetv3_small/labels.txt"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "app": {
+    "language": "es",
+    "theme_accent": "#d97706",
+    "window_title": "Control gestual de dron virtual"
+  },
+  "camera": {
+    "default_index": 0,
+    "probe_count": 5,
+    "mirror": true,
+    "frame_interval_ms": 30
+  },
+  "vision": {
+    "hand_padding": 0.3,
+    "min_detection_confidence": 0.5,
+    "min_tracking_confidence": 0.5,
+    "max_num_hands": 1,
+    "min_roi_size_px": 5
+  },
+  "models": {
+    "manifest": "models/manifest.json",
+    "default": "resnet18"
+  },
+  "inference": {
+    "preferred_device": "directml",
+    "fallback_device": "cpu",
+    "min_confidence": 0.7
+  },
+  "commands": {
+    "mapping": "config/gesture_commands.json",
+    "stability_frames": 5,
+    "send_rate_hz": 5,
+    "no_hand_behavior": "detener",
+    "low_confidence_behavior": "detener"
+  },
+  "airsim": {
+    "enabled": true,
+    "vehicle_name": "",
+    "horizontal_speed_mps": 2.0,
+    "vertical_speed_mps": 1.5,
+    "yaw_rate_deg_s": 45.0,
+    "movement_duration_s": 0.5
+  },
+  "logs": {
+    "directory": "logs"
+  }
+}
+
