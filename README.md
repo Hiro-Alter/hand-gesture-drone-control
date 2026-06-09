@@ -11,6 +11,8 @@ Camara RGB -> MediaPipe -> ROI -> mejoramiento -> PyTorch -> gesto -> comando ->
 ## Estado Actual
 
 - Interfaz grafica en PySide6.
+- Interfaz por pestañas: Operacion, Configuracion, AirSim, Logs y Pruebas.
+- Predicciones visibles en tarjetas de alto contraste y sobre la imagen de camara.
 - Captura de camara con OpenCV.
 - Deteccion de mano y landmarks con MediaPipe.
 - Extraccion de ROI de la mano.
@@ -98,6 +100,12 @@ Estas pruebas no requieren AirSim ni Unity:
 ```powershell
 python tests\smoke_test_core.py
 python tests\smoke_test_pipeline.py
+```
+
+Diagnostico general del entorno:
+
+```powershell
+python -m src.diagnostics
 ```
 
 Las pruebas funcionales con AirSim se omiten hasta que el proyecto en Unity este configurado.

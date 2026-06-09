@@ -2,7 +2,8 @@
   "app": {
     "language": "es",
     "theme_accent": "#d97706",
-    "window_title": "Control gestual de dron virtual"
+    "theme_mode": "light",
+    "window_title": "Sistema de vision artificial para direccionamiento de dron virtual"
   },
   "camera": {
     "default_index": 0,
@@ -24,12 +25,12 @@
   "inference": {
     "preferred_device": "directml",
     "fallback_device": "cpu",
-    "min_confidence": 0.7
+    "min_confidence": 0.9
   },
   "commands": {
     "mapping": "config/gesture_commands.json",
     "stability_frames": 5,
-    "send_rate_hz": 5,
+    "send_rate_hz": 5.0,
     "no_hand_behavior": "detener",
     "low_confidence_behavior": "detener"
   },
@@ -45,4 +46,3 @@
     "directory": "logs"
   }
 }
-

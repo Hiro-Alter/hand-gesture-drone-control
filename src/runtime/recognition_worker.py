@@ -101,6 +101,7 @@ class RecognitionWorker(QObject):
                         limiter,
                         logger,
                         classifier.definition.name,
+                        classifier.device.name,
                         pipeline_start,
                     )
                     time.sleep(frame_sleep)
@@ -120,7 +121,7 @@ class RecognitionWorker(QObject):
                     command_name = decision.command
                     event_type = "low_confidence"
                     self._send_if_allowed(decision, limiter, logger, prediction.gesture, prediction.confidence, prediction.inference_time_ms, pipeline_time_ms)
-                elif state.stable:
+                else:
                     decision = mapper.from_gesture(prediction.gesture)
                     if decision is None:
                         logger.log(
@@ -134,7 +135,8 @@ class RecognitionWorker(QObject):
                     else:
                         command_label = decision.label
                         command_name = decision.command
-                        self._send_if_allowed(decision, limiter, logger, prediction.gesture, prediction.confidence, prediction.inference_time_ms, pipeline_time_ms)
+                        if state.stable:
+                            self._send_if_allowed(decision, limiter, logger, prediction.gesture, prediction.confidence, prediction.inference_time_ms, pipeline_time_ms)
 
                 logger.log(
                     event_type,
@@ -189,6 +191,7 @@ class RecognitionWorker(QObject):
         limiter: CommandRateLimiter,
         logger: CsvSessionLogger,
         model_name: str,
+        device_name: str,
         pipeline_start: float,
     ) -> None:
         decision = self._safe_decision(mapper)
@@ -211,7 +214,7 @@ class RecognitionWorker(QObject):
                 "command_name": decision.command,
                 "stable_count": 0,
                 "stable_required": 0,
-                "device": "",
+                "device": device_name,
                 "model": model_name,
                 "inference_time_ms": 0.0,
                 "pipeline_time_ms": pipeline_time_ms,
@@ -260,4 +263,3 @@ class RecognitionWorker(QObject):
     def resume(self) -> None:
         self._paused = False
         self.status_ready.emit("Captura reanudada")
-
