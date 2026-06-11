@@ -37,6 +37,7 @@ def run_diagnostics() -> list[CheckResult]:
         )
     )
     results.extend(_check_imports())
+    results.append(_check_msgpack_rpc())
     results.append(_check_config(config))
     results.extend(_check_models(config))
     results.append(_check_gesture_mapping(config))
@@ -46,7 +47,7 @@ def run_diagnostics() -> list[CheckResult]:
 
 
 def print_results(results: list[CheckResult]) -> None:
-    print("Diagnostico de entorno y aplicacion")
+    print("Diagnóstico de entorno y aplicación")
     print("=" * 40)
     for result in results:
         marker = "[OK]" if result.status == "OK" else "[WARN]" if result.status == "WARN" else "[ERROR]"
@@ -85,12 +86,35 @@ def _check_imports() -> list[CheckResult]:
     return results
 
 
+def _check_msgpack_rpc() -> CheckResult:
+    try:
+        import msgpack
+
+        raw_version = getattr(msgpack, "version", None) or getattr(msgpack, "__version__", "desconocida")
+        if isinstance(raw_version, tuple):
+            version_text = ".".join(str(part) for part in raw_version)
+            major = int(raw_version[0]) if raw_version else 0
+        else:
+            version_text = str(raw_version)
+            major = int(version_text.split(".", 1)[0]) if version_text and version_text[0].isdigit() else 0
+        if major >= 1:
+            return CheckResult(
+                "Msgpack RPC AirSim",
+                "WARN",
+                f"msgpack {version_text} no es compatible con msgpack-rpc-python; usar msgpack==0.6.2",
+                required=False,
+            )
+        return CheckResult("Msgpack RPC AirSim", "OK", f"msgpack {version_text}", required=False)
+    except Exception as exc:
+        return CheckResult("Msgpack RPC AirSim", "WARN", str(exc), required=False)
+
+
 def _check_config(config: dict) -> CheckResult:
     required_keys = ["camera", "vision", "models", "inference", "commands", "logs"]
     missing = [key for key in required_keys if key not in config]
     if missing:
-        return CheckResult("Configuracion", "ERROR", f"Faltan claves: {', '.join(missing)}")
-    return CheckResult("Configuracion", "OK", "config/app_config.json cargado")
+        return CheckResult("Configuración", "ERROR", f"Faltan claves: {', '.join(missing)}")
+    return CheckResult("Configuración", "OK", "config/app_config.json cargado")
 
 
 def _check_models(config: dict) -> list[CheckResult]:
@@ -98,14 +122,14 @@ def _check_models(config: dict) -> list[CheckResult]:
     try:
         catalog = ModelCatalog(config["models"]["manifest"])
     except Exception as exc:
-        return [CheckResult("Catalogo de modelos", "ERROR", str(exc))]
+        return [CheckResult("Catálogo de modelos", "ERROR", str(exc))]
 
     expected = {"resnet18", "mobilenetv3_small"}
     missing = expected.difference(catalog.model_names)
     if missing:
-        results.append(CheckResult("Catalogo de modelos", "ERROR", f"Faltan: {', '.join(sorted(missing))}"))
+        results.append(CheckResult("Catálogo de modelos", "ERROR", f"Faltan: {', '.join(sorted(missing))}"))
         return results
-    results.append(CheckResult("Catalogo de modelos", "OK", ", ".join(catalog.model_names)))
+    results.append(CheckResult("Catálogo de modelos", "OK", ", ".join(catalog.model_names)))
 
     for model_name in catalog.model_names:
         try:
@@ -147,18 +171,18 @@ def _check_camera_probe(config: dict) -> CheckResult:
     try:
         cameras = list_available_cameras(probe_count)
     except Exception as exc:
-        return CheckResult("Camaras", "WARN", str(exc), required=False)
+        return CheckResult("Cámaras", "WARN", str(exc), required=False)
     if not cameras:
-        return CheckResult("Camaras", "WARN", "no se detectaron camaras", required=False)
+        return CheckResult("Cámaras", "WARN", "no se detectaron cámaras", required=False)
     labels = ", ".join(camera.label for camera in cameras)
-    return CheckResult("Camaras", "OK", labels, required=False)
+    return CheckResult("Cámaras", "OK", labels, required=False)
 
 
 def _check_pipeline_sample(config: dict) -> CheckResult:
     sample_dir = PROJECT_ROOT / "tests" / "assets" / "hand_samples"
     samples = sorted(sample_dir.glob("*.jpg"))
     if not samples:
-        return CheckResult("Pipeline con muestra", "WARN", "no hay imagenes locales", required=False)
+        return CheckResult("Pipeline con muestra", "WARN", "no hay imágenes locales", required=False)
 
     pipeline = VisionPipeline(config.get("vision", {}))
     try:
@@ -184,7 +208,7 @@ def _check_pipeline_sample(config: dict) -> CheckResult:
         return CheckResult(
             "Pipeline con muestra",
             "WARN",
-            "imagenes leidas, pero sin ROI detectable",
+            "imágenes leídas, pero sin ROI detectable",
             required=False,
         )
     except Exception as exc:
@@ -201,4 +225,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

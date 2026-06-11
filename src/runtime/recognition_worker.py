@@ -68,7 +68,10 @@ class RecognitionWorker(QObject):
                 self.config["commands"].get("stability_frames", 5),
                 self.config["inference"].get("min_confidence", 0.7),
             )
-            limiter = CommandRateLimiter(self.config["commands"].get("send_rate_hz", 5))
+            limiter = CommandRateLimiter(
+                self.config["commands"].get("send_rate_hz", 5),
+                self.config["commands"].get("repeat_same_command_s"),
+            )
 
             camera = CameraDevice(
                 self.camera_index,
@@ -76,7 +79,7 @@ class RecognitionWorker(QObject):
             )
             camera.open()
             logger.log("camera_open", model_name=self.model_name, camera_id=self.camera_index)
-            self.status_ready.emit(f"Camara activa: {self.camera_index}")
+            self.status_ready.emit(f"Cámara activa: {self.camera_index}")
 
             vision = VisionPipeline(self.config.get("vision", {}))
             frame_sleep = max(0.0, float(self.config.get("camera", {}).get("frame_interval_ms", 30)) / 1000.0)
@@ -238,8 +241,14 @@ class RecognitionWorker(QObject):
         if not limiter.should_send(decision.command):
             return
         status = self.airsim_client.send_command(decision.command) if self.airsim_client.connected else self.airsim_client.status
+        if status.connected and status.accepted:
+            event_type = "command_scheduled"
+        elif status.connected:
+            event_type = "command_ignored"
+        else:
+            event_type = "command_ready"
         logger.log(
-            "command_sent" if status.connected else "command_ready",
+            event_type,
             model_name=self.model_name,
             camera_id=self.camera_index,
             gesture=gesture,

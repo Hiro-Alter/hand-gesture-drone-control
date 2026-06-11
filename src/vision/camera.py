@@ -17,7 +17,7 @@ def list_available_cameras(probe_count: int = 5) -> list[CameraInfo]:
         cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
         try:
             if cap.isOpened():
-                cameras.append(CameraInfo(index=index, label=f"Camara {index}"))
+                cameras.append(CameraInfo(index=index, label=f"Cámara {index}"))
         finally:
             cap.release()
     return cameras
@@ -37,14 +37,14 @@ class CameraDevice:
         self._capture = cv2.VideoCapture(self.camera_index, cv2.CAP_DSHOW)
         if not self._capture.isOpened():
             self.release()
-            raise RuntimeError(f"No se pudo abrir la camara {self.camera_index}")
+            raise RuntimeError(f"No se pudo abrir la cámara {self.camera_index}")
 
     def read(self):
         if self._capture is None:
-            raise RuntimeError("La camara no esta abierta")
+            raise RuntimeError("La cámara no está abierta")
         ok, frame = self._capture.read()
         if not ok or frame is None:
-            raise RuntimeError("No se pudo leer un frame de la camara")
+            raise RuntimeError("No se pudo leer un frame de la cámara")
         if self.mirror:
             frame = cv2.flip(frame, 1)
         return frame
@@ -53,4 +53,3 @@ class CameraDevice:
         if self._capture is not None:
             self._capture.release()
             self._capture = None
-

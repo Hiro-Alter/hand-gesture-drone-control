@@ -1,2 +1,1 @@
-"""Vision artificial: camara, landmarks, ROI y preprocesamiento."""
-
+"""Visión artificial: cámara, landmarks, ROI y preprocesamiento."""

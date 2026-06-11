@@ -20,7 +20,7 @@ def main() -> int:
     sample_dir = ROOT / "tests" / "assets" / "hand_samples"
     samples = sorted(sample_dir.glob("*.jpg"))
     if not samples:
-        raise FileNotFoundError(f"No hay imagenes de prueba en {sample_dir}")
+        raise FileNotFoundError(f"No hay imágenes de prueba en {sample_dir}")
 
     pipeline = VisionPipeline(config.get("vision", {}))
     try:

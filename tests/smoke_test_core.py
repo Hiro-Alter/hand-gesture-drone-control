@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.airsim_client.client import AirSimClient
+from src.commands.drone_control_state import DroneControlPhase, DroneControlStateMachine
 from src.commands.gesture_command_mapper import GestureCommandMapper
 from src.commands.rate_limiter import CommandRateLimiter
 from src.commands.stabilizer import GestureStabilizer
@@ -26,6 +29,11 @@ def main() -> int:
     assert mapper.from_gesture("like").command == "forward"
     assert mapper.safe().command == "hover"
 
+    airsim_client = AirSimClient(config["airsim"])
+    assert airsim_client.forward_speed == config["airsim"]["forward_speed_mps"]
+    assert airsim_client.lateral_speed == config["airsim"]["lateral_speed_mps"]
+    assert airsim_client.yaw_rate == 45.0
+
     stabilizer = GestureStabilizer(required_frames=3, min_confidence=0.7)
     assert not stabilizer.update("like", 0.9).stable
     assert not stabilizer.update("like", 0.9).stable
@@ -35,6 +43,26 @@ def main() -> int:
     assert limiter.should_send("hover")
     assert not limiter.should_send("hover")
     assert limiter.should_send("forward")
+    limiter = CommandRateLimiter(send_rate_hz=5, repeat_same_command_s=10)
+    assert limiter.should_send("hover")
+    assert not limiter.should_send("hover")
+    assert limiter.should_send("forward")
+
+    control = DroneControlStateMachine(motion_refresh_s=0.05)
+    control.on_connected(landed=True)
+    assert control.phase == DroneControlPhase.GROUNDED
+    assert control.request("forward").accepted is False
+    assert control.request("takeoff").accepted
+    assert control.request("hover").accepted is False
+    control.on_command_finished("takeoff", success=True, landed=False)
+    assert control.request("forward").accepted
+    assert control.request("forward").accepted is False
+    time.sleep(0.06)
+    assert control.request("forward").accepted
+    assert control.request("land").accepted
+    assert control.request("forward").accepted is False
+    control.on_command_finished("land", success=True, landed=True)
+    assert control.phase == DroneControlPhase.GROUNDED
 
     for model_name in catalog.model_names:
         classifier = GestureClassifier.load(catalog.get(model_name), preferred_device="cpu", fallback_device="cpu")
@@ -51,4 +79,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

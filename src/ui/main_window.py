@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
 
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        self.title_label = QLabel("Sistema de vision artificial para direccionamiento de dron virtual")
+        self.title_label = QLabel("Sistema de visión artificial para el direccionamiento de un dron virtual")
         self.title_label.setObjectName("appTitle")
         self.title_label.setWordWrap(True)
         self.subtitle_label = QLabel("Control mediante gestos de la mano")
@@ -106,8 +106,8 @@ class MainWindow(QMainWindow):
         self.logs_tab = QWidget()
         self.tests_tab = QWidget()
 
-        self.tabs.addTab(self.operation_tab, "Operacion")
-        self.tabs.addTab(self.config_tab, "Configuracion")
+        self.tabs.addTab(self.operation_tab, "Operación")
+        self.tabs.addTab(self.config_tab, "Configuración")
         self.tabs.addTab(self.airsim_tab, "AirSim")
         self.tabs.addTab(self.logs_tab, "Logs")
         self.tabs.addTab(self.tests_tab, "Pruebas")
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(14, 14, 14, 14)
         layout.setSpacing(12)
 
-        self.camera_view = QLabel("Camara")
+        self.camera_view = QLabel("Cámara")
         self.camera_view.setAlignment(Qt.AlignCenter)
         self.camera_view.setMinimumSize(760, 500)
         self.camera_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -142,7 +142,7 @@ class MainWindow(QMainWindow):
 
         self.camera_combo = QComboBox()
         self.model_combo = QComboBox()
-        self.refresh_button = QPushButton("Actualizar camaras")
+        self.refresh_button = QPushButton("Actualizar cámaras")
         self.start_button = QPushButton("Iniciar")
         self.pause_button = QPushButton("Pausar")
         self.stop_button = QPushButton("Detener")
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         self.pause_button.setObjectName("secondaryButton")
         self.stop_button.setObjectName("dangerButton")
 
-        side_layout.addWidget(QLabel("Camara"))
+        side_layout.addWidget(QLabel("Cámara"))
         side_layout.addWidget(self.camera_combo)
         side_layout.addWidget(self.refresh_button)
         side_layout.addSpacing(8)
@@ -227,9 +227,14 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
 
-        group = QGroupBox("Parametros de operacion")
-        group.setMaximumWidth(760)
-        form = QFormLayout(group)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(12)
 
         self.min_confidence_spin = QDoubleSpinBox()
         self.min_confidence_spin.setRange(0.0, 1.0)
@@ -243,6 +248,37 @@ class MainWindow(QMainWindow):
         self.send_rate_spin.setRange(0.1, 30.0)
         self.send_rate_spin.setSingleStep(0.5)
         self.send_rate_spin.setDecimals(1)
+        self.send_rate_spin.setSuffix(" Hz")
+
+        self.repeat_command_spin = QDoubleSpinBox()
+        self.repeat_command_spin.setRange(0.2, 5.0)
+        self.repeat_command_spin.setSingleStep(0.05)
+        self.repeat_command_spin.setDecimals(2)
+        self.repeat_command_spin.setSuffix(" s")
+
+        self.forward_speed_spin = QDoubleSpinBox()
+        self.forward_speed_spin.setRange(0.2, 10.0)
+        self.forward_speed_spin.setSingleStep(0.2)
+        self.forward_speed_spin.setDecimals(1)
+        self.forward_speed_spin.setSuffix(" m/s")
+
+        self.lateral_speed_spin = QDoubleSpinBox()
+        self.lateral_speed_spin.setRange(0.2, 10.0)
+        self.lateral_speed_spin.setSingleStep(0.2)
+        self.lateral_speed_spin.setDecimals(1)
+        self.lateral_speed_spin.setSuffix(" m/s")
+
+        self.vertical_speed_spin = QDoubleSpinBox()
+        self.vertical_speed_spin.setRange(0.2, 6.0)
+        self.vertical_speed_spin.setSingleStep(0.2)
+        self.vertical_speed_spin.setDecimals(1)
+        self.vertical_speed_spin.setSuffix(" m/s")
+
+        self.yaw_rate_spin = QDoubleSpinBox()
+        self.yaw_rate_spin.setRange(5.0, 180.0)
+        self.yaw_rate_spin.setSingleStep(5.0)
+        self.yaw_rate_spin.setDecimals(0)
+        self.yaw_rate_spin.setSuffix(" °/s")
 
         self.frame_interval_spin = QSpinBox()
         self.frame_interval_spin.setRange(10, 500)
@@ -254,18 +290,47 @@ class MainWindow(QMainWindow):
         self.hand_padding_spin.setDecimals(2)
 
         self.mirror_check = QCheckBox("Vista espejo")
+        self.body_frame_check = QCheckBox("Usar el frente actual del dron")
 
-        form.addRow("Confianza minima", self.min_confidence_spin)
-        form.addRow("Frames de estabilidad", self.stability_frames_spin)
-        form.addRow("Frecuencia de envio", self.send_rate_spin)
-        form.addRow("Intervalo de captura", self.frame_interval_spin)
-        form.addRow("Padding de mano", self.hand_padding_spin)
-        form.addRow("Camara", self.mirror_check)
+        vision_group = QGroupBox("Visión e inferencia")
+        vision_group.setMaximumWidth(760)
+        vision_form = QFormLayout(vision_group)
+        vision_form.addRow("Confianza mínima", self.min_confidence_spin)
+        vision_form.addRow("Padding de mano", self.hand_padding_spin)
+
+        commands_group = QGroupBox("Estabilidad y comandos")
+        commands_group.setMaximumWidth(760)
+        commands_form = QFormLayout(commands_group)
+        commands_form.addRow("Frames de estabilidad", self.stability_frames_spin)
+        commands_form.addRow("Frecuencia de envío", self.send_rate_spin)
+        commands_form.addRow("Repetir mismo comando", self.repeat_command_spin)
+
+        airsim_group = QGroupBox("AirSim y movimiento")
+        airsim_group.setMaximumWidth(760)
+        airsim_form = QFormLayout(airsim_group)
+        airsim_form.addRow("Velocidad adelante/atrás", self.forward_speed_spin)
+        airsim_form.addRow("Velocidad lateral", self.lateral_speed_spin)
+        airsim_form.addRow("Velocidad vertical", self.vertical_speed_spin)
+        airsim_form.addRow("Velocidad de giro", self.yaw_rate_spin)
+        airsim_form.addRow("Referencia de movimiento", self.body_frame_check)
+
+        camera_group = QGroupBox("Cámara")
+        camera_group.setMaximumWidth(760)
+        camera_form = QFormLayout(camera_group)
+        camera_form.addRow("Intervalo de captura", self.frame_interval_spin)
+        camera_form.addRow("Vista previa", self.mirror_check)
+
+        content_layout.addWidget(vision_group)
+        content_layout.addWidget(commands_group)
+        content_layout.addWidget(airsim_group)
+        content_layout.addWidget(camera_group)
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
 
         buttons = QHBoxLayout()
         buttons.setAlignment(Qt.AlignLeft)
-        self.apply_config_button = QPushButton("Aplicar en sesion")
-        self.save_config_button = QPushButton("Guardar configuracion")
+        self.apply_config_button = QPushButton("Aplicar en sesión")
+        self.save_config_button = QPushButton("Guardar configuración")
         self.apply_config_button.setObjectName("secondaryButton")
         self.apply_config_button.setMaximumWidth(190)
         self.save_config_button.setMaximumWidth(210)
@@ -277,10 +342,9 @@ class MainWindow(QMainWindow):
         self.config_status_label.setWordWrap(True)
         self.config_status_label.setMaximumWidth(760)
 
-        layout.addWidget(group)
+        layout.addWidget(scroll, 1)
         layout.addLayout(buttons)
         layout.addWidget(self.config_status_label)
-        layout.addStretch(1)
 
         self.apply_config_button.clicked.connect(self.apply_config_controls)
         self.save_config_button.clicked.connect(self.save_config_controls)
@@ -312,10 +376,16 @@ class MainWindow(QMainWindow):
         buttons.addWidget(self.airsim_disconnect_button)
 
         command_group = QGroupBox("Comandos manuales")
-        command_group.setMaximumWidth(560)
+        command_group.setMinimumWidth(470)
+        command_group.setMaximumWidth(500)
         command_layout = QGridLayout(command_group)
+        command_layout.setContentsMargins(12, 16, 12, 12)
         command_layout.setHorizontalSpacing(8)
         command_layout.setVerticalSpacing(8)
+        command_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        for column in range(3):
+            command_layout.setColumnMinimumWidth(column, 142)
+            command_layout.setColumnStretch(column, 0)
         commands = [
             ("Despegar", "takeoff"),
             ("Aterrizar", "land"),
@@ -330,12 +400,11 @@ class MainWindow(QMainWindow):
         ]
         for index, (label, command) in enumerate(commands):
             button = QPushButton(label)
-            button.setMinimumWidth(120)
-            button.setMaximumWidth(165)
+            button.setFixedSize(142, 34)
             button.clicked.connect(lambda _checked=False, value=command: self.send_manual_airsim_command(value))
             command_layout.addWidget(button, index // 3, index % 3)
 
-        note = QLabel("Estos controles solo envian comandos si AirSim esta conectado. Las pruebas end-to-end quedan pendientes hasta configurar Unity/AirSim.")
+        note = QLabel("Estos controles solo envían comandos si AirSim está conectado. Las pruebas end-to-end dependen de Unity/AirSim en ejecución.")
         note.setWordWrap(True)
         note.setObjectName("metricLabel")
 
@@ -375,14 +444,14 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(10)
 
-        self.run_diagnostics_button = QPushButton("Ejecutar diagnostico")
+        self.run_diagnostics_button = QPushButton("Ejecutar diagnóstico")
         self.run_diagnostics_button.setObjectName("secondaryButton")
         self.diagnostics_view = QPlainTextEdit()
         self.diagnostics_view.setReadOnly(True)
         self.diagnostics_view.setObjectName("logsView")
         self.diagnostics_view.setPlainText(
-            "Esta pestana ejecuta verificaciones locales sin conectar con Unity/AirSim.\n"
-            "El modulo de pruebas sistematicas se implementara cuando existan imagenes etiquetadas de la estacion experimental."
+            "Esta pestaña ejecuta verificaciones locales sin conectar con Unity/AirSim.\n"
+            "El módulo de pruebas sistemáticas se implementará cuando existan imágenes etiquetadas de la estación experimental."
         )
 
         layout.addWidget(self.run_diagnostics_button)
@@ -448,6 +517,7 @@ class MainWindow(QMainWindow):
             QMainWindow, QWidget {{
                 background: {c["background"]};
                 color: {c["text"]};
+                font-family: "Segoe UI", Arial, sans-serif;
                 font-size: 14px;
             }}
             QLabel {{
@@ -618,7 +688,7 @@ class MainWindow(QMainWindow):
         self.config.setdefault("app", {})["theme_mode"] = "dark" if self.dark_mode else "light"
         self._apply_style()
         self._update_theme_button()
-        self.config_status_label.setText("Tema visual aplicado. Usa Guardar configuracion para conservarlo.")
+        self.config_status_label.setText("Tema visual aplicado. Usa Guardar configuración para conservarlo.")
 
     def _update_theme_button(self) -> None:
         self.theme_button.setText("Modo claro" if self.dark_mode else "Modo oscuro")
@@ -629,12 +699,12 @@ class MainWindow(QMainWindow):
         cameras = list_available_cameras(probe_count)
         if not cameras:
             default_index = int(self.config.get("camera", {}).get("default_index", 0))
-            self.camera_combo.addItem(f"Camara {default_index} (sin validar)", default_index)
-            self.status_label.setText("Estado: no se detectaron camaras; se deja la camara por defecto")
+            self.camera_combo.addItem(f"Cámara {default_index} (sin validar)", default_index)
+            self.status_label.setText("Estado: no se detectaron cámaras; se deja la cámara por defecto")
             return
         for camera in cameras:
             self.camera_combo.addItem(camera.label, camera.index)
-        self.status_label.setText(f"Estado: {len(cameras)} camara(s) detectada(s)")
+        self.status_label.setText(f"Estado: {len(cameras)} cámara(s) detectada(s)")
 
     def _load_models(self) -> None:
         self.model_combo.clear()
@@ -645,28 +715,44 @@ class MainWindow(QMainWindow):
                 self.model_combo.setCurrentIndex(self.model_combo.count() - 1)
 
     def _load_config_controls(self) -> None:
+        airsim_config = self.config["airsim"]
+        horizontal_speed = float(airsim_config.get("horizontal_speed_mps", 2.0))
         self.min_confidence_spin.setValue(float(self.config["inference"].get("min_confidence", 0.7)))
         self.stability_frames_spin.setValue(int(self.config["commands"].get("stability_frames", 5)))
         self.send_rate_spin.setValue(float(self.config["commands"].get("send_rate_hz", 5)))
+        self.repeat_command_spin.setValue(float(self.config["commands"].get("repeat_same_command_s", 1.0)))
+        self.forward_speed_spin.setValue(float(airsim_config.get("forward_speed_mps", horizontal_speed)))
+        self.lateral_speed_spin.setValue(float(airsim_config.get("lateral_speed_mps", horizontal_speed)))
+        self.vertical_speed_spin.setValue(float(airsim_config.get("vertical_speed_mps", 1.5)))
+        self.yaw_rate_spin.setValue(float(airsim_config.get("yaw_rate_deg_s", 45.0)))
         self.frame_interval_spin.setValue(int(self.config["camera"].get("frame_interval_ms", 30)))
         self.hand_padding_spin.setValue(float(self.config["vision"].get("hand_padding", 0.3)))
         self.mirror_check.setChecked(bool(self.config["camera"].get("mirror", True)))
+        self.body_frame_check.setChecked(bool(airsim_config.get("use_body_frame", True)))
 
     def apply_config_controls(self) -> None:
         self.config.setdefault("app", {})["theme_mode"] = "dark" if self.dark_mode else "light"
         self.config["inference"]["min_confidence"] = self.min_confidence_spin.value()
         self.config["commands"]["stability_frames"] = self.stability_frames_spin.value()
         self.config["commands"]["send_rate_hz"] = self.send_rate_spin.value()
+        self.config["commands"]["repeat_same_command_s"] = self.repeat_command_spin.value()
+        self.config["airsim"].pop("horizontal_speed_mps", None)
+        self.config["airsim"]["forward_speed_mps"] = self.forward_speed_spin.value()
+        self.config["airsim"]["lateral_speed_mps"] = self.lateral_speed_spin.value()
+        self.config["airsim"]["vertical_speed_mps"] = self.vertical_speed_spin.value()
+        self.config["airsim"]["yaw_rate_deg_s"] = self.yaw_rate_spin.value()
+        self.config["airsim"]["use_body_frame"] = self.body_frame_check.isChecked()
         self.config["camera"]["frame_interval_ms"] = self.frame_interval_spin.value()
         self.config["vision"]["hand_padding"] = self.hand_padding_spin.value()
         self.config["camera"]["mirror"] = self.mirror_check.isChecked()
-        self.config_status_label.setText("Configuracion aplicada para la proxima captura.")
+        self.airsim_client.update_config(self.config.get("airsim", {}))
+        self.config_status_label.setText("Configuración aplicada para la próxima captura.")
 
     def save_config_controls(self) -> None:
         self.apply_config_controls()
         config_path = project_path("config/app_config.json")
         config_path.write_text(json.dumps(self.config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        self.config_status_label.setText(f"Configuracion guardada en {config_path}")
+        self.config_status_label.setText(f"Configuración guardada en {config_path}")
 
     def start_recognition(self) -> None:
         self.apply_config_controls()
@@ -767,7 +853,7 @@ class MainWindow(QMainWindow):
         latest = self._latest_log_file()
         if latest is None:
             self.logs_path_label.setText("Log: no hay archivos CSV")
-            self.logs_view.setPlainText("No hay logs todavia. Inicia y deten una captura para generar una sesion.")
+            self.logs_view.setPlainText("No hay logs todavía. Inicia y detén una captura para generar una sesión.")
             return
         self.logs_path_label.setText(f"Log: {latest}")
         lines = latest.read_text(encoding="utf-8", errors="replace").splitlines()

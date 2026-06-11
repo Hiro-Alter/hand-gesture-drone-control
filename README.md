@@ -1,30 +1,30 @@
 # Hand Gesture Drone Control
 
-Aplicacion de escritorio para Windows orientada al control de un dron virtual en AirSim mediante reconocimiento de gestos estaticos de la mano.
+Aplicación de escritorio para Windows orientada al control de un dron virtual en AirSim mediante reconocimiento de gestos estáticos de la mano.
 
 El flujo principal es:
 
 ```text
-Camara RGB -> MediaPipe -> ROI -> mejoramiento -> PyTorch -> gesto -> comando -> AirSim
+Cámara RGB -> MediaPipe -> ROI -> mejoramiento -> PyTorch -> gesto -> comando -> AirSim
 ```
 
 ## Estado Actual
 
-- Interfaz grafica en PySide6.
-- Interfaz por pestañas: Operacion, Configuracion, AirSim, Logs y Pruebas.
-- Predicciones visibles en tarjetas de alto contraste y sobre la imagen de camara.
-- Captura de camara con OpenCV.
-- Deteccion de mano y landmarks con MediaPipe.
-- Extraccion de ROI de la mano.
+- Interfaz gráfica en PySide6.
+- Interfaz por pestañas: Operación, Configuración, AirSim, Logs y Pruebas.
+- Predicciones visibles en tarjetas de alto contraste y sobre la imagen de cámara.
+- Captura de cámara con OpenCV.
+- Detección de mano y landmarks con MediaPipe.
+- Extracción de ROI de la mano.
 - Mejoramiento de imagen migrado desde los scripts previos.
 - Inferencia con modelos TorchScript de PyTorch.
 - ResNet18 como modelo por defecto.
 - MobileNetV3-Small como modelo alternativo.
 - DirectML como dispositivo preferido y CPU como respaldo.
-- Estabilidad configurable de prediccion.
+- Estabilidad configurable de predicción.
 - Mapeo gesto-comando desde `config/gesture_commands.json`.
-- Cliente AirSim encapsulado.
-- Logs CSV por sesion.
+- Cliente AirSim encapsulado con envío de comandos en segundo plano.
+- Logs CSV por sesión.
 
 WebSocket no forma parte del flujo final.
 
@@ -49,7 +49,7 @@ tests_future/
 
 ## Modelos
 
-La fuente canonica de modelos es `models/manifest.json`.
+La fuente canónica de modelos es `models/manifest.json`.
 
 Modelos disponibles:
 
@@ -64,7 +64,7 @@ Cada modelo conserva:
 - `metadata.json`
 - `labels.txt`
 
-## Instalacion
+## Instalación
 
 Usar Python 3.10 en Windows.
 
@@ -74,20 +74,31 @@ py -3.10 -m venv .venv
 pip install -r requirements.txt
 ```
 
-AirSim se instala aparte cuando el simulador ya este listo. El paquete requiere desactivar build isolation en algunas instalaciones:
+AirSim se instala aparte cuando el simulador ya esté listo. El paquete requiere desactivar build isolation en algunas instalaciones:
 
 ```powershell
 pip install -r requirements-airsim-prereqs.txt
 pip install --no-build-isolation -r requirements-airsim.txt
 ```
 
-## Ejecucion
+`requirements-airsim-prereqs.txt` fija `msgpack==0.6.2` porque `msgpack-rpc-python`, usado por AirSim, no es compatible con `msgpack` 1.x.
+
+La configuración de AirSim usa `127.0.0.1:41451` por defecto. Para evitar lag en Unity, los comandos se encolan en segundo plano y `commands.repeat_same_command_s` controla cada cuánto se repite una orden sostenida. Los desplazamientos usan marco del cuerpo del dron (`use_body_frame=true`), por lo que `avanzar` respeta el frente actual después de girar.
+
+Velocidades configurables principales:
+
+- `airsim.forward_speed_mps`: velocidad para avanzar y retroceder.
+- `airsim.lateral_speed_mps`: velocidad para moverse a izquierda y derecha.
+- `airsim.vertical_speed_mps`: velocidad para subir y bajar.
+- `airsim.yaw_rate_deg_s`: velocidad de giro, 45 °/s por defecto.
+
+## Ejecución
 
 ```powershell
 python -m src.main
 ```
 
-Tambien se puede usar:
+También se puede usar:
 
 ```powershell
 start_gesture_system.bat
@@ -102,17 +113,17 @@ python tests\smoke_test_core.py
 python tests\smoke_test_pipeline.py
 ```
 
-Diagnostico general del entorno:
+Diagnóstico general del entorno:
 
 ```powershell
 python -m src.diagnostics
 ```
 
-Las pruebas funcionales con AirSim se omiten hasta que el proyecto en Unity este configurado.
+Las pruebas funcionales con AirSim requieren tener Unity ejecutando el proyecto `DroneDemo`.
 
 ## Gestos Y Comandos
 
-El mapeo vigente esta en `config/gesture_commands.json`:
+El mapeo vigente está en `config/gesture_commands.json`:
 
 - `fist`: despegar
 - `palm`: aterrizar
@@ -125,12 +136,13 @@ El mapeo vigente esta en `config/gesture_commands.json`:
 - `two_up_inverted`: bajar
 - `rock`: girar
 
-## Documentacion
+## Documentación
 
+- `ESQUEMA_CONTROL_DRON.md`: máquina de estados y reglas de control del dron.
 - `DOCUMENTO_TECNICO_SOFTWARE.md`: documento maestro.
 - `AGENTS.md`: reglas persistentes para Codex.
-- `docs/diagnostico_repositorio.md`: decisiones de auditoria y limpieza.
-- `docs/arquitectura.md`: separacion de responsabilidades.
+- `docs/diagnostico_repositorio.md`: decisiones de auditoría y limpieza.
+- `docs/arquitectura.md`: separación de responsabilidades.
 - `docs/pipeline_vision.md`: pipeline visual.
-- `docs/integracion_airsim.md`: integracion prevista con AirSim.
-- `docs/modulo_pruebas_futuro.md`: pruebas sistematicas futuras.
+- `docs/integracion_airsim.md`: integración prevista con AirSim.
+- `docs/modulo_pruebas_futuro.md`: pruebas sistemáticas futuras.

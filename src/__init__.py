@@ -1,2 +1,1 @@
-"""Aplicacion de control gestual para dron virtual."""
-
+"""Aplicación de control gestual para dron virtual."""

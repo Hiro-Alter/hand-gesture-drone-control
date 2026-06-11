@@ -1,2 +1,1 @@
-"""Orquestacion en tiempo de ejecucion."""
-
+"""Orquestación en tiempo de ejecución."""
