@@ -7,6 +7,7 @@ from typing import Any
 from PySide6.QtCore import QThread, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QAbstractSpinBox,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
@@ -33,6 +34,22 @@ from src.runtime.recognition_worker import RecognitionWorker
 from src.ui.image_utils import ndarray_to_pixmap, with_prediction_overlay
 from src.utils.paths import project_path
 from src.vision.camera import list_available_cameras
+
+
+DEFAULT_CONFIG_VALUES = {
+    "min_confidence": 0.95,
+    "stability_frames": 5,
+    "send_rate_hz": 2.0,
+    "repeat_same_command_s": 1.0,
+    "forward_speed_mps": 3.5,
+    "lateral_speed_mps": 3.0,
+    "vertical_speed_mps": 2.2,
+    "yaw_rate_deg_s": 45.0,
+    "frame_interval_ms": 30,
+    "hand_padding": 0.30,
+    "mirror": True,
+    "use_body_frame": True,
+}
 
 
 class MainWindow(QMainWindow):
@@ -97,7 +114,7 @@ class MainWindow(QMainWindow):
 
         self.tabs = QTabWidget(self)
         self.tabs.setObjectName("mainTabs")
-        self.tabs.setDocumentMode(True)
+        self.tabs.setDocumentMode(False)
         root_layout.addWidget(self.tabs, 1)
 
         self.operation_tab = QWidget()
@@ -232,7 +249,7 @@ class MainWindow(QMainWindow):
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         content = QWidget()
-        content_layout = QVBoxLayout(content)
+        content_layout = QHBoxLayout(content)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(12)
 
@@ -289,24 +306,36 @@ class MainWindow(QMainWindow):
         self.hand_padding_spin.setSingleStep(0.05)
         self.hand_padding_spin.setDecimals(2)
 
+        numeric_controls = (
+            self.min_confidence_spin,
+            self.stability_frames_spin,
+            self.send_rate_spin,
+            self.repeat_command_spin,
+            self.forward_speed_spin,
+            self.lateral_speed_spin,
+            self.vertical_speed_spin,
+            self.yaw_rate_spin,
+            self.frame_interval_spin,
+            self.hand_padding_spin,
+        )
+        for control in numeric_controls:
+            control.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
         self.mirror_check = QCheckBox("Vista espejo")
         self.body_frame_check = QCheckBox("Usar el frente actual del dron")
 
         vision_group = QGroupBox("Visión e inferencia")
-        vision_group.setMaximumWidth(760)
         vision_form = QFormLayout(vision_group)
         vision_form.addRow("Confianza mínima", self.min_confidence_spin)
         vision_form.addRow("Padding de mano", self.hand_padding_spin)
 
         commands_group = QGroupBox("Estabilidad y comandos")
-        commands_group.setMaximumWidth(760)
         commands_form = QFormLayout(commands_group)
         commands_form.addRow("Frames de estabilidad", self.stability_frames_spin)
         commands_form.addRow("Frecuencia de envío", self.send_rate_spin)
         commands_form.addRow("Repetir mismo comando", self.repeat_command_spin)
 
         airsim_group = QGroupBox("AirSim y movimiento")
-        airsim_group.setMaximumWidth(760)
         airsim_form = QFormLayout(airsim_group)
         airsim_form.addRow("Velocidad adelante/atrás", self.forward_speed_spin)
         airsim_form.addRow("Velocidad lateral", self.lateral_speed_spin)
@@ -315,25 +344,37 @@ class MainWindow(QMainWindow):
         airsim_form.addRow("Referencia de movimiento", self.body_frame_check)
 
         camera_group = QGroupBox("Cámara")
-        camera_group.setMaximumWidth(760)
         camera_form = QFormLayout(camera_group)
         camera_form.addRow("Intervalo de captura", self.frame_interval_spin)
         camera_form.addRow("Vista previa", self.mirror_check)
 
-        content_layout.addWidget(vision_group)
-        content_layout.addWidget(commands_group)
-        content_layout.addWidget(airsim_group)
-        content_layout.addWidget(camera_group)
-        content_layout.addStretch(1)
+        left_column = QVBoxLayout()
+        left_column.setSpacing(12)
+        left_column.addWidget(vision_group)
+        left_column.addWidget(airsim_group)
+        left_column.addStretch(1)
+
+        right_column = QVBoxLayout()
+        right_column.setSpacing(12)
+        right_column.addWidget(commands_group)
+        right_column.addWidget(camera_group)
+        right_column.addStretch(1)
+
+        content_layout.addLayout(left_column, 1)
+        content_layout.addLayout(right_column, 1)
         scroll.setWidget(content)
 
         buttons = QHBoxLayout()
         buttons.setAlignment(Qt.AlignLeft)
+        self.reset_config_button = QPushButton("Restablecer valores")
         self.apply_config_button = QPushButton("Aplicar en sesión")
         self.save_config_button = QPushButton("Guardar configuración")
+        self.reset_config_button.setObjectName("secondaryButton")
         self.apply_config_button.setObjectName("secondaryButton")
+        self.reset_config_button.setMaximumWidth(190)
         self.apply_config_button.setMaximumWidth(190)
         self.save_config_button.setMaximumWidth(210)
+        buttons.addWidget(self.reset_config_button)
         buttons.addWidget(self.apply_config_button)
         buttons.addWidget(self.save_config_button)
 
@@ -346,6 +387,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(buttons)
         layout.addWidget(self.config_status_label)
 
+        self.reset_config_button.clicked.connect(self.reset_config_controls)
         self.apply_config_button.clicked.connect(self.apply_config_controls)
         self.save_config_button.clicked.connect(self.save_config_controls)
 
@@ -729,6 +771,24 @@ class MainWindow(QMainWindow):
         self.hand_padding_spin.setValue(float(self.config["vision"].get("hand_padding", 0.3)))
         self.mirror_check.setChecked(bool(self.config["camera"].get("mirror", True)))
         self.body_frame_check.setChecked(bool(airsim_config.get("use_body_frame", True)))
+
+    def reset_config_controls(self) -> None:
+        defaults = DEFAULT_CONFIG_VALUES
+        self.min_confidence_spin.setValue(defaults["min_confidence"])
+        self.stability_frames_spin.setValue(defaults["stability_frames"])
+        self.send_rate_spin.setValue(defaults["send_rate_hz"])
+        self.repeat_command_spin.setValue(defaults["repeat_same_command_s"])
+        self.forward_speed_spin.setValue(defaults["forward_speed_mps"])
+        self.lateral_speed_spin.setValue(defaults["lateral_speed_mps"])
+        self.vertical_speed_spin.setValue(defaults["vertical_speed_mps"])
+        self.yaw_rate_spin.setValue(defaults["yaw_rate_deg_s"])
+        self.frame_interval_spin.setValue(defaults["frame_interval_ms"])
+        self.hand_padding_spin.setValue(defaults["hand_padding"])
+        self.mirror_check.setChecked(defaults["mirror"])
+        self.body_frame_check.setChecked(defaults["use_body_frame"])
+        self.config_status_label.setText(
+            "Valores predeterminados cargados. Usa Aplicar o Guardar para confirmarlos."
+        )
 
     def apply_config_controls(self) -> None:
         self.config.setdefault("app", {})["theme_mode"] = "dark" if self.dark_mode else "light"
